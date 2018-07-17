@@ -268,7 +268,6 @@ public class Robot extends TimedRobot {
 			claws.intakeEject(1.0);
 		}	else if (oi.getButtonReleased(Constants.STICK0, 9))	{
 				claws.intakeStop();
-				//System.out.println("Executed intake stop");
 		}
 		
 		
@@ -355,7 +354,6 @@ public class Robot extends TimedRobot {
 	}
 	
 	double timeout = 0;	// varies based on distance/angle
-	
 	
 	/**
 	 * This function is called periodically during test mode.
@@ -578,7 +576,6 @@ public class Robot extends TimedRobot {
 			
 			if (result == 0 || result == -1) {
 				autoStep +=1;
-				//autoStep = 99;
 			}
 		case 6:		// drive forward, stop, close jaws
 			do {
@@ -587,7 +584,6 @@ public class Robot extends TimedRobot {
 			} while(result == 1);
 			
 			if (result == 0 || result == -1) {
-				//claws.intakeAcquire();
 				claws.toggleClaws();
 				claws.intakeAcquire();
 				Timer.delay(0.5);
@@ -707,7 +703,6 @@ public class Robot extends TimedRobot {
 			
 			if (result == 0 || result == -1) {
 				autoStep +=1;
-				//autoStep = 99;
 			}
 		case 6:		// drive forward to pile, stop, close jaws
 			do {
@@ -716,7 +711,6 @@ public class Robot extends TimedRobot {
 			} while(result == 1);
 			
 			if (result == 0 || result == -1) {
-				//claws.intakeAcquire();
 				claws.toggleClaws();
 				claws.intakeAcquire();
 				Timer.delay(0.5);
@@ -762,7 +756,6 @@ public class Robot extends TimedRobot {
 				result = drivetrain.driveTo(8.0, 1.0);
 				claws.lowerWrist();
 				claws.intakeEject(0.3);
-				//elevator.moveTo(1200);
 			} while(result == 1);	
 			
 			Timer.delay(0.5);
@@ -825,7 +818,6 @@ public class Robot extends TimedRobot {
 			
 			elevator.stop();
 			claws.lowerWrist();
-			//Timer.delay(0.25);
 			claws.intakeEject(0.8);
 			Timer.delay(0.5);
 			claws.intakeStop();
@@ -865,7 +857,6 @@ public class Robot extends TimedRobot {
 		case 2:		// turn cw				
 			do {
 				result = drivetrain.turnTo(90, 3.0);
-				//elevator.stop();
 				elevator.moveTo(Constants.kEncoder_Scale);
 			} while (result == 1);
 								
@@ -882,7 +873,6 @@ public class Robot extends TimedRobot {
 			
 			elevator.stop();
 			claws.lowerWrist();
-			//Timer.delay(0.25);
 			claws.intakeEject(0.8);
 			Timer.delay(0.5);
 			claws.intakeStop();
@@ -921,7 +911,6 @@ public class Robot extends TimedRobot {
 		case 2:		// turn ccw				
 			do {
 				result = drivetrain.turnTo(-90, 2.0);
-				//elevator.stop();
 				elevator.moveTo(Constants.kEncoder_LowSwitch);
 			} while (result == 1);
 								
@@ -983,7 +972,6 @@ public class Robot extends TimedRobot {
 		case 2:		// turn ccw				
 			do {
 				result = drivetrain.turnTo(90, 2.0);
-				//elevator.stop();
 				elevator.moveTo(Constants.kEncoder_LowSwitch);
 			} while (result == 1);
 								

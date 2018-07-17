@@ -76,7 +76,6 @@ public class Claws {
 	}
 	
 	public void intakeManualControl(double throttle) {
-	    //throttle = Util.limit(throttle);
 	    leftWheelMotor.set(ControlMode.PercentOutput, -1.0 * throttle);
 	    rightWheelMotor.set(ControlMode.PercentOutput, throttle);
 	  }

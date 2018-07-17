@@ -117,8 +117,6 @@ public class Drivetrain {
 		rearLeftMotor.follow(frontLeftMotor); 	// follow the master talon
 		rearRightMotor.setInverted(true);		
 		rearRightMotor.follow(frontRightMotor);
-				
-		//double leftStickValue, rightStickValue;
 	}
 	
 	
@@ -128,7 +126,6 @@ public class Drivetrain {
 	public void initializeEncoders()	{
 		frontLeftMotor.getSensorCollection().setQuadraturePosition(0, 0);
 		frontRightMotor.getSensorCollection().setQuadraturePosition(0, 0);
-		//frontRightMotor.setSensorPhase(true);	// runs negative otherwise, due to being mirrored
 	}
 
 	/*
@@ -172,17 +169,6 @@ public class Drivetrain {
 		 * 
 		 * Also, left is negative when going forward.
 		 */
-		
-		// Check to see if one of these is negative
-		//if ((leftEncoderDistance * rightEncoderDistance) < 0)	{	// one the these are negative
-		//	if (leftEncoderDistance < 0) {
-		//		leftEncoderDistance = -leftEncoderDistance;		// left encoder is negative
-		//	}
-		//	else {
-		//		rightEncoderDistance = -rightEncoderDistance;	// right encoder must be negative
-		//	}
-		//}
-		//return (leftEncoderDistance + rightEncoderDistance)/2 * Constants.DRIVE_DIST_PER_PULSE;
 		
 		// Return only the left encoder until the right encoder gets fixed
 		return leftEncoderDistance * Constants.DRIVE_DIST_PER_PULSE;
@@ -288,10 +274,8 @@ public class Drivetrain {
 			turnController.setSetpoint(angle);
 			rotateToAngleRate = 0; 	// This value will be updated in the pidWrite() method.
 			leftStickValue = rightStickValue = 0.0;
-			//intervalTimer.start();  // start the PID timer
 			failTimer.start();		// the PID will fail if this timer exceeded
 			Robot.isTurning = true;
-			//System.out.println("First call in turnTo method, PID enabled");
 		}
 		
 		// This is the final output of the PID
@@ -325,7 +309,6 @@ public class Drivetrain {
 		
 		// Check to see if PID has succeeded, or timed out and failed
 		if (intervalTimer.hasPeriodPassed(0.5))	{
-			//System.out.println("Setpoint angle: " + angle);
 			System.out.println("Actual angle: " + imuGetYaw());
 			System.out.println("turnTo() PID finished");
 			frontLeftMotor.set(ControlMode.PercentOutput, 0.0);	// stop the motors
@@ -338,7 +321,6 @@ public class Drivetrain {
 			turnController.reset();
 			return 0;
 		} else if (failTimer.hasPeriodPassed(timeout)) {	// the PID has failed!
-			//System.out.println("Setpoint angle: " + angle);
 			System.out.println("turnTo() PID timeout, actual angle: " + imuGetYaw());
 			frontLeftMotor.set(ControlMode.PercentOutput, 0.0);	// stop the motors
 			frontRightMotor.set(ControlMode.PercentOutput, 0.0);	// stop the motors
@@ -380,25 +362,15 @@ public class Drivetrain {
 			initializeEncoders();	// zero the encoders
 			leftStickValue = rightStickValue = 0.0;
 			failTimer.start();		// the PID will fail if this timer exceeded
-			//System.out.println("First call in driveTo method, PID enabled");
-			//System.out.println("Target position in inches: " + distance);
-			//System.out.println("Starting yaw: " + imuGetYaw());
 			Robot.isDriving = true;
 		} 
 		
 		// This is the final output of the PID
 		driveToDistanceRate = driveController.getOutput(getEncoderDistance(), distance);
 		rotateToAngleRate = turnYawController.getOutput(imuGetYaw()); 	// setpoint already loaded
-		//System.out.println("rotateToAngleRate: " + driveToDistanceRate);
-		//System.out.println("Yaw: " + imuGetYaw());
-		// Debug
-		//SmartDashboard.putNumber("Left encoder: ", getEncoderDistance());
 		currentDistanceError = distance - getEncoderDistance();
-		//System.out.println("Current distance: " + getEncoderDistance());
-		//System.out.println("Current error: " + currentDistanceError);
 		leftStickValue = -driveToDistanceRate - rotateToAngleRate;
 		rightStickValue = -driveToDistanceRate + rotateToAngleRate;
-		//System.out.println("Stick value: " + leftStickValue);
 		diffDrive.tankDrive(leftStickValue,  rightStickValue);
 		
 		// When we get close to the target, dynamically adjust PI terms

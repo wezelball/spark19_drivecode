@@ -12,8 +12,6 @@ import edu.wpi.first.wpilibj.Timer;
 //import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-//import edu.wpi.first.wpilibj.SpeedControllerGroup;
-
 public class Elevator {
 
 	// Motors
@@ -34,10 +32,6 @@ public class Elevator {
 	private Timer failTimer = new Timer(); // PID fails if value exceeded
 	boolean timing = false; // PID interval timer timing
 
-	// Define the motors that are slaved as a control group
-	// private SpeedControllerGroup lifter = new
-	// SpeedControllerGroup(lifterSecondaryMotor, lifterPrimaryMotor);
-
 	public Elevator() {
 		lifterPrimaryMotor.set(ControlMode.PercentOutput, 0);
 		lifterSecondaryMotor.follow(lifterPrimaryMotor);
@@ -57,7 +51,6 @@ public class Elevator {
 		 * This is the PID controller for the drive
 		 */
 		elevatorController = new MiniPID(Constants.kElevate_Pu, Constants.kElevate_Iu, Constants.kElevate_Du);
-		// elevatorController.setOutputLimits(-0.5, 1.0);
 	}
 
 	/*
@@ -75,10 +68,6 @@ public class Elevator {
 	public int getEncoderPosition() {
 		return lifterPrimaryMotor.getSensorCollection().getQuadraturePosition();
 	}
-
-	// public double getPosition() {
-	// return lifterPrimaryMotor.getSelectedSensorPosition(0);
-	// }
 
 	public double getVelocity() {
 		return lifterPrimaryMotor.getSelectedSensorVelocity(0);
@@ -112,7 +101,6 @@ public class Elevator {
 			failTimer.start(); // the PID will fail if this timer exceeded
 			Robot.isElevating = true;
 			shiftToElevate(); // safety third!
-			//inDeadBand = false;
 			elevatorController.reset();
 		}
 
@@ -164,12 +152,9 @@ public class Elevator {
 			if (!timing) {
 				intervalTimer.start();
 				timing = true;
-				// System.out.println("Started PID timer in moveTo()");
-
 			}
 		} else {
 			intervalTimer.reset();
-			// System.out.println("Stopped PID timer in moveTo()");
 		}
 
 		if (intervalTimer.hasPeriodPassed(0.1)) {
@@ -200,8 +185,6 @@ public class Elevator {
 	}
 
 	public void manualControl(double speed) {
-		// Not sure if this should be there
-		// shiftToElevate();
 		lifterPrimaryMotor.set(ControlMode.PercentOutput, speed);
 		System.out.println("Elevator feedback (manual): " + getEncoderPosition());
 		// Zero out the encoder if bottom prox made
@@ -246,11 +229,6 @@ public class Elevator {
 
 	public void shiftToClimb() {
 		pto.set(false);
-	}
-
-	// test code - delete if not needed
-	public void setClimberUp() {
-		climber.set(true);
 	}
 
 	/*
