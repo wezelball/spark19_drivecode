@@ -243,4 +243,33 @@ public class Elevator {
 			lifterSecondaryMotor.setNeutralMode(NeutralMode.Coast);
 		}
 	}
+	
+	/*
+     *  Compresses the X axis from errorBand to +/-1
+     *  errorband is the value of encoder counts typecast to double
+     *  (or any other range of doubles) over which the sigmoid function
+     *  will react.
+     *  
+     *  Method inputs:
+     *  x: the value that is in the same units as errorBand. X can vary outside
+     *  of the error band, it will just be clamped to +/-1
+     *  errorBand: 
+     *  A window of values the sigmoid function will be spread out over. 
+     *  The smaller the errorBand, the more aggressive the response
+     *  
+     */
+    private double compressX(double x, double errorBand)
+    {   
+        double imin, imax, omin, omax;
+        
+        imin = -(errorBand/2.0);		// the minimum value of the error band
+        imax = (errorBand/2.0);			// the maximum value of the error band
+        // The output window is a compressed version of the input window
+        // A setting of 4 units will allows the tanh() funtion to vary its
+        // full range of +/-1
+        omin = -2.0;					// output window min
+        omax = 2.0;						// output windows max
+        
+        return ((omax - omin) * (x - imin))/(imax-imin) + omin;
+    }
 }
