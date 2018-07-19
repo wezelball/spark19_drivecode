@@ -1,0 +1,130 @@
+spark19_drivecode
+
+20180628_1810
+Now have PID turnTo() working well and driveTo() working without steering correction. Will add steering correction next rev.
+
+20180628_2001
+Now have steering correction in driveTo(), appears to be working, not sure how effective yet. Problem is that when dooing hard stop, there is a turn to the right which is a function of braking and not under PID control.
+
+Accuracy of distance not that great yet, but I probably need to move on to autonomous mode.
+
+20180629_1806
+PID driveTo() more accurate, tested at 3 values 48, 88, 240 inches representing field realistic values.  Need to improve accuracy, but will fix elevator code next.
+
+20180629_2045
+Elevator PID working, but a little rough.  Very sensitive to PID constants. Descending elevator crashes from height, may need to limit output on descent.  Also need to test drivrTo() and turnTo() some more, may be a bug or two there.
+
+20180701_1921
+I might have elevator moveTo() and drivebase driveTo() properly returning success and failure, but turnTo() need fixing.  Elevator height control improved, but still need work.
+
+Tried autonomouse sequence in testPeriodic, but its wreaking havok with the drivebase motors, and I can't see a reason why.
+
+20180702_1925
+Put autonomous code inside of autonomousPeriodic(), and it works, with some initial problems that I might have solved (hopefully).
+
+turnTo() is tuned fairly well, driveTo() needs better tuning
+
+Next step is to start building autonomous modes, selectable from the chooser.
+
+
+20180703_1726
+Got a real basic default and left/right automous to work based on FMS data. Also have a sendable chooser to select between the 2 autonomous modes.  Distances/angles are not real, just proof of concept.
+
+My next step is to tune up the sloppy driveController and elevatorController PIDs as they suck real bad.  Turning is pretty good, i'll have the kids put the finishing touches on all three, on carpet.  Have kids record a set of constants for concrete floor, so I won't have to drag out carpet every time I want to test.
+
+20180703_1931
+Better performance for elevator, could still use polish.  Drivetrain distance drive still rough, i'm experimenting with changing PI gain when near setpoint, still not finished testing.
+
+20180704_1435
+Drivetrain distance is nuts on! Dynamically changing the PID when near target made the difference. No integral gain at all until robot is close, that's just causing us to overshoot.  Also, I limit the PID output to +-/- 0.8 in driveTo() setup.  Average error was < 1" at 48" and 96", and 1" at 288".  Check out the distance_test excel spreadsheet.
+
+I'm going to try one of Jello's single cube auto's next. 
+
+20180704_1610
+Testing Jello's 2-cube auto, step 1:
+1. Drive straight 12"
+2. Turn clockwise 25 deg.
+3. Raise elevator to switch height
+4. Drive forward 90"
+5. Lower jaw (or not)
+6. Fast eject cube
+
+What a reality check!  I thought I was the man with the accurate PID positioning, but I didnt test a 12" move, and that's where it failed, on the 1st damn move!  The gains are too low for a short move, and increasing them makes the longer moves fail.  I may need to have another condition which detects a short move and fills in proper gains.  Maybe create slots like the Talon SRX has, which is a particular set of gains for each slot.  So a 12" move would have one slot, and almost all the other moves would have a different slot.  Should the slots have approach gains too?  For now, probably not.
+
+I did replace the for loops with do/while, and lookinfg at return value from move instead of bloolean flags like isDriving, which doesn't seem to work right in auto.  It looks like I can get the sequence working, just have to deal with the PID gains!
+
+20180705_1644
+Backup at beginning of team meeting just before deploy.
+
+20180705_1929
+Programming team changes, not checked yet.  Need to add a timeout argument to each method driveTo, turnTo, moveTo. 
+
+20180706_2001
+Got a lot done:
+1. Added timeout value to driveTo(), moveTo(), and turnTo().
+2. Tuned turnTo() for much better performance, got driveTo() back close to where it was. We will not make short drives, so I don't have to kill myself.
+3. Have working single cuble right auto.
+
+Next, i will try put the single cube auto in a class, which should clean up auto code.
+
+20180706_2115
+So putting the single cube auto in a separate class caused runtime error due to resource issues (hardware allocated more than once), but I did fix the problem by adding it as a method in the Robot class.  Cleaned up top level autonomous a lot.
+
+I am about halfway through a double cube right auto, which is a separate method.
+
+Next time, finish the double cube auto, and then work on right scale.
+
+20180707_1832
+Got single and double cube right auto working!!
+A little close on time and not field responsive yet (doesn't respond to FMS).
+
+Next step is to add left side switch and integrate into fms
+
+20180707_2005
+More testing right side on newly marked field.  Only minor adjustments now, but should verify after doing left side.
+
+Also, after watcing videos, I think turning on the intake before closing the jaws may be causing a problem sometimes.  If the cube is pulled in diagonally, it is likely to fall out before the shot. Will fix next time.
+
+Aftet that, do left side, make FMS sensitive.  Hope this doesn't take as long...
+
+20180708_1444
+I have a working single and double cube autonomous, left and right!!!!  Still may need some minor tweaks, but it mostly works, also responds properly with FMS simulation.
+
+I did find a bug with being unable to use the climber PTO, which I fixed. But I also have problem with hook clylinder not working, which may be hardware.  climberToggle() method is almost stupid simple.  This is really important.
+
+Kids will help me polish switch code, then I will start on James's side auto, where we start in corner on either left or right and do following:
+1. If FMS says our scale is on our side we take it.
+2. If not, if FMS says our switch is on our side we take it.
+3. If not, just cross auto line.
+
+20180708_1819
+Save before I try some adjustments to get further from cubes in auto. 
+
+20180709_1928
+Commented out side auto stuff - I think it will work with ample testing time.  I may leave this to students.
+
+Fine tuning on switch auto modes, as I wasn't breaking the switch plane in all modes of auto. That is now fixed.  Also more clearance from cubes.
+
+Time study was initially slightly over ~60to 100msec, made small changes to auto and decreased timeouts, need to test again tomorrow.
+
+Only other problem I see is that backup is not far enough after 1st placement for both modes.  So in left auto, i'm to the left of the centerline, and in right auto to the right of center.  This has caused problems in some cases.  This is definitely a priority tomorrow.
+
+20180710_2001
+Got climber cylinder cord working, small bug.
+
+Brooke and Jello came by and helped me with motion study on auto, made many improvemnts in both drive path and time.  I think we are good to go!
+
+I might freeze development at this point.
+
+20180712_2312
+Did adjustments to new left/right side single cube switch/scale autonomous.  Getting better performance, but haven't tested on field yet.
+
+20180713_1122
+Adjusted autonomous 2-cube and scale values based on field practice
+
+20180713_1548
+More practice field adjustments, but having problems with an unstable elevator
+
+20180714_0941
+Found and fixed another bug with elevator code, tested and fixed elevator drifting error in autonomous modes.
+

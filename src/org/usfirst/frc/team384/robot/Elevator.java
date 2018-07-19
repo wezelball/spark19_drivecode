@@ -22,15 +22,30 @@ public class Elevator {
 	private Solenoid pto = new Solenoid(0, 0);
 	private Solenoid climber = new Solenoid(0, 3);
 
-	private MiniPID elevatorController; // elevator position pid controller
-	double elevateToPositionRate; // elevator position pid output
-	double elevatorOutput; // value to elevator motor
-	double currentDistanceError = 0;
+	// Elevator parameters
+	private MiniPID elevatorController; // elevator position pid controller - THIS IS DEPRECATED
+	double elevateToPositionRate; // elevator position pid output - do we need this?
+	double elevatorOutput; 	// value to elevator motor
+	double elevatorOutMin;	// Minimum elevator output
+	double elevatorOutMax;	// Maximum elevator output
+ 	double currentDistanceError;	// do we need this?
+	double errorBand;		// the error band or gain passed to the sigmoid function
+	/*
+	 * For manual control, we are maintaining a virtual axis, which runs from 0 to 
+	 * Constants.kEncoder_max.  The virtual axis will be driven by joystick input
+	 * at a rate propertional to the deflection of the joystick.
+	 * 
+	 *  The virtual axis value will have to be loaded with the current encoder counts whenever
+	 *  going into joystick control so the elevator doesn't jump
+	 */
+	int virtualAxis;		
 
 	// Need to check elapsed time for PID control
-	private Timer intervalTimer = new Timer(); // PID interval timer
-	private Timer failTimer = new Timer(); // PID fails if value exceeded
-	boolean timing = false; // PID interval timer timing
+	private Timer intervalTimer = new Timer(); // PID interval timer - do we need this for sigmoid?
+	private Timer failTimer = new Timer(); // PID fails if value exceeded  - do we need this for sigmoid?
+	boolean timing = false; // PID interval timer timing  - do we need this for sigmoid?
+	boolean elevatorIsEnabled;		// the elevator is enabled
+	boolean elevatorIsManual;		// elevator under manual control
 
 	public Elevator() {
 		lifterPrimaryMotor.set(ControlMode.PercentOutput, 0);
@@ -48,9 +63,20 @@ public class Elevator {
 		lifterPrimaryMotor.setNeutralMode(NeutralMode.Brake);
 
 		/*
-		 * This is the PID controller for the drive
+		 * This is the PID controller for the drive THIS IS DEPRECATED
 		 */
 		elevatorController = new MiniPID(Constants.kElevate_Pu, Constants.kElevate_Iu, Constants.kElevate_Du);
+		
+		/*
+		 * Establishes sensible output limits that can be changed after defining class
+		 * Now I kind of understand how *this* works. It lets us configure the class with initial values
+		 * whether they are passed as parameters or a noargs, as we are doing here
+		 * These values can be changed anytime we want after class is constructed
+		 */
+		this.elevatorOutMin = -1.0;	// Minimum elevator output
+		this.elevatorOutMax = 1.0;	// Maximum elevator output
+		this.currentDistanceError = 0;	
+		this.errorBand = 100;
 	}
 
 	/*
@@ -82,13 +108,15 @@ public class Elevator {
 	}
 
 	/*
-	 * The new elevator positioning code I will start with an integer position, and
-	 * work up to a double position in inches
+	 * THIS METHOD IS DEPRECATED AND WILL DIE SOON
 	 * 
 	 * Also requires a timeout value, which is time before we give up PID control
 	 * and move to whatever next step
 	 * 
 	 * Returns: 1 = PID not complete 0 = PID complete -1 = error
+	 * 
+	 * This method will be removed after the new sigmoid code is developed
+	 *  Do we need timeouts in the new sigmoid code?
 	 */
 	public int moveTo(int position) {
 		boolean isDescending;
@@ -246,30 +274,74 @@ public class Elevator {
 	
 	/*
      *  Compresses the X axis from errorBand to +/-1
-     *  errorband is the value of encoder counts typecast to double
-     *  (or any other range of doubles) over which the sigmoid function
-     *  will react.
+     *  Accepts the following:
+     *  x = the current error value, assume encoder counts cast to double
+     *  setp = setpoint, in encoder counts cast to double
+     *  band = the range of values that correspond to a -1 to +1 changle of the output
+     *  the smaller the ban, the more aggressive the control
+     *  Note that the inputs could be in other units, as long as they are compatible
      *  
-     *  Method inputs:
-     *  x: the value that is in the same units as errorBand. X can vary outside
-     *  of the error band, it will just be clamped to +/-1
-     *  errorBand: 
-     *  A window of values the sigmoid function will be spread out over. 
-     *  The smaller the errorBand, the more aggressive the response
+     *  Returns:
+     *  A double between -1 and +1,  which represents motor output
      *  
+     *  It is expected that the output limits are already set - can I improve this?
      */
-    private double compressX(double x, double errorBand)
+    double compressX(double x, double setp, double band)
     {   
-        double imin, imax, omin, omax;
+        double imin, imax, omin, omax, final_out;
         
-        imin = -(errorBand/2.0);		// the minimum value of the error band
-        imax = (errorBand/2.0);			// the maximum value of the error band
-        // The output window is a compressed version of the input window
-        // A setting of 4 units will allows the tanh() funtion to vary its
-        // full range of +/-1
-        omin = -2.0;					// output window min
-        omax = 2.0;						// output windows max
+        imin = setp -(band/2.0);
+        imax = setp + (band/2.0);
+        omin = -2.0;	// minimum value of x on output
+        omax = 2.0;		// maximum value of x on output
+        final_out = ((omax - omin) * (x - imin))/(imax-imin) + omin;
         
-        return ((omax - omin) * (x - imin))/(imax-imin) + omin;
+        if (final_out > elevatorOutMax)
+        	final_out = elevatorOutMax;
+        else if (final_out < elevatorOutMin)
+        	final_out = elevatorOutMin;
+        
+        return final_out;
+    }
+    
+    /*
+     * Enable elevator positioning. This does preamble stuff, need to execute a
+     * moveTo() method to move to position.
+     * 
+     * Should this hold position at the current location?
+     */
+    public void enable()	{
+    	elevateToPositionRate = 0; 
+		elevatorOutput = 0.0;
+		//elevatorController.reset();
+		elevatorIsEnabled = true;
+    }
+    
+    /*
+     * We're done with the elevator. Should move it to zero before doing this?
+     */
+    public void disable()	{
+    	elevatorIsEnabled = false;
+    }
+    
+    /*
+     * Set the errorBand or "gain" of the sigmoid function.  This is the window of error
+     * that the function ranges from -1 to +1 over.  The smaller the number, the more
+     * aggressive the response 
+     */ 
+    public void setErrorBand(double error)	{
+    	errorBand = error;
+    }
+    
+    public void setOutputLimits(double min, double max)	{
+    	elevatorOutMin = min;
+    	elevatorOutMax = max;
+    }
+    
+    /*
+     * I guess its a good idea to check of the elevator in enabled
+     */
+    public boolean isEnabled()	{
+    	return elevatorIsEnabled; 
     }
 }

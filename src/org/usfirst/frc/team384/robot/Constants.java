@@ -87,11 +87,12 @@ public class Constants {
 	public static final boolean kRightMotorInvert = true;
 	
 	// Elevator
-	public static final int ENCODER_GROUND = 0; 
-	public static final int ENCODER_LOW = 550; 
+	//public static final int ENCODER_GROUND = 0; 
+	//public static final int ENCODER_LOW = 550; 
 	public static final int kEncoder_LowSwitch = 950;		// 1200
-	public static final int ENCODER_HISWITCH = 1500; 		// 1100
+	//public static final int ENCODER_HISWITCH = 1500; 		// 1100
 	public static final int kEncoder_Scale = 3100;			// 3175
+	public static final int kEncoder_max = 3200;			// verify this
 	 
 	
 }
