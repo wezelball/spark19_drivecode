@@ -83,6 +83,7 @@ public class Robot extends TimedRobot {
 	boolean isScaleLeftOurs = false;	// do we own the left scale?  if not, we own the right
 	boolean sideLeft = false;			// true of on the left side of field
 	boolean sideRight = false;			// true of on the left side of field
+	double timeout = 0;	// varies based on distance/angle
 	
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -210,8 +211,6 @@ public class Robot extends TimedRobot {
 
 
 	public void teleopInit()	{
-		// Not sure if I need this here, elevator enable code does this
-		//elevator.shiftToElevate(); 	// safer to start out this way
 		// Enable the elevator PID control
 		elevator.enable();
 	}
@@ -285,8 +284,6 @@ public class Robot extends TimedRobot {
 				elevatorHeight = Constants.kEncoder_Max;
 			else if (elevatorHeight < 0)
 				elevatorHeight = 0;
-			
-			//elevator.manualControl(-oi.getAxis(Constants.STICK1, Constants.YAXIS));
 		} else {
 			elevator.stop();
 		}
@@ -366,42 +363,43 @@ public class Robot extends TimedRobot {
 	 */
 	@Override
 	public void testInit()	{
-		//LiveWindow.addActuator("Left drive", drivetrain.frontLeftMotor);
 		drivetrain.imuZeroYaw();
+		// Enable the elevator PID control
+		elevator.enable();
 	}
-	
-	double timeout = 0;	// varies based on distance/angle
 	
 	/**
 	 * This function is called periodically during test mode.
 	 */
 	@Override
 	public void testPeriodic() {
+		
+		int smartDashTest;	// like it says
 
 		/*
 		 * TEST CODE FOR NAV TURN AND DRIVE - START
 		 */ 
 		
 		// Zero out the Yaw axis, and zero the encoders
-		if (oi.getButtonHeld(Constants.STICK1,11))	{
+		if (oi.getButtonHeld(Constants.STICK0,11))	{
 			drivetrain.imuZeroYaw();
 			drivetrain.initializeEncoders();
 		}  
 						
 		// Turn 90 degrees CCW
-		if (oi.getButtonHeld(Constants.STICK1,8))	{
+		if (oi.getButtonHeld(Constants.STICK0,8))	{
 			turnAngle = -45;
 			drivetrain.turnTo(turnAngle, 2.0);
 		}
 						
 		// Turn 90 degrees CW
-		if (oi.getButtonHeld(Constants.STICK1,9))	{
+		if (oi.getButtonHeld(Constants.STICK0,9))	{
 			turnAngle = 45;
 			drivetrain.turnTo(turnAngle, 2.0);
 		}
 						
 		// Turn to 0 degrees
-		if (oi.getButtonHeld(Constants.STICK1,10))	{
+		if (oi.getButtonHeld(Constants.STICK0,10))	{
 			turnAngle = 0;
 			drivetrain.turnTo(turnAngle, 2.0);
 		}		
@@ -410,18 +408,16 @@ public class Robot extends TimedRobot {
 			drivetrain.turnTo(turnAngle, 2.0);
 		}
 				
-		// Go forward in inches
-		if (oi.getButtonHeld(Constants.STICK1,6))	{
-			driveDistance = 24.0;		// 48.0, 88.0, 240.0
-			timeout = 3.0;				// adjust base on drive distance
-			drivetrain.driveTo(driveDistance,timeout);
+		// Set PTO to elevator
+		if (oi.getButtonHeld(Constants.STICK1, 6))	{
+			elevator.shiftToElevate();
 		}
 		
-		// Go forward in inches
-		if (oi.getButtonHeld(Constants.STICK1,7))	{
-			driveDistance = 90.0;		// 48.0, 88.0, 240.0
-			timeout = 10.0;				// adjust base on drive distance
-			drivetrain.driveTo(driveDistance, 10.0);
+		// Set PTO to climber
+		// TODO - When going to climber mode, how does that affect the new 
+		// elevator operation?
+		if (oi.getButtonHeld(Constants.STICK1, 7))	{
+			elevator.shiftToClimb();
 		}
 
 		if (isDriving)	{
@@ -431,6 +427,58 @@ public class Robot extends TimedRobot {
 		/*
 		* TEST CODE FOR NAV TURN AND DRIVE - END
 		*/
+
+		/*
+		* TEST CODE FOR ELEVATOR - START
+		*/
+
+		// Manual elevator control - use joystick to control elevator setpoint
+		if (oi.getButtonHeld(Constants.STICK1,4))	{
+			// Add a little chunk of joystick to setpoint for every scan
+			elevatorHeight += 75 * -oi.getAxis(Constants.STICK1, Constants.YAXIS);
+			
+			// Make sure that elevator height doesn't get out of control
+			if (elevatorHeight > Constants.kEncoder_Max)
+				elevatorHeight = Constants.kEncoder_Max;
+			else if (elevatorHeight < 0)
+				elevatorHeight = 0;
+		} else {
+			elevator.stop();
+		}
+
+		// Send elevator to switch height position 
+		if (oi.getButtonHeld(Constants.STICK1,8))	{
+			elevatorHeight = Constants.kEncoder_LowSwitch;
+			//elevator.moveTo(elevatorHeight);
+		}
+		
+		// Send elevator to scale height position 
+		if (oi.getButtonHeld(Constants.STICK1,9))	{
+			elevatorHeight = Constants.kEncoder_Scale;
+			//elevator.moveTo(elevatorHeight);
+		}
+		
+		// Send elevator to ground height position 
+		if (oi.getButtonHeld(Constants.STICK1,10))	{
+			elevatorHeight = 0;
+			//elevator.moveTo(elevatorHeight);
+		}
+		
+		/*
+		 *  Command the elevator to move to whatever height is currently set,
+		 *  which is zero if otherwise
+		 */
+		if (isElevating)	{
+			elevator.moveTo(elevatorHeight);
+		}
+
+		/*
+		* TEST CODE FOR ELEVATOR - END
+		*/
+		
+		// SmartDashboard
+		SmartDashboard.putNumber("Elev fdbk: ", elevator.getEncoderPosition());
+		SmartDashboard.putNumber("Elev setp: ", elevatorHeight);
 	}
 
 	public void singleCubeRightAuto()	{

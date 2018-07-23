@@ -26,7 +26,7 @@ public class Elevator {
 	private MiniPID elevatorController; // elevator position pid controller
 	double elevateToPositionRate; // elevator position pid output
 	double elevatorOutput; // value to elevator motor
-	double currentDistanceError = 0;
+	double currentDistanceError;
 
 	// Need to check elapsed time for PID control
 	private Timer intervalTimer = new Timer(); // PID interval timer
@@ -52,6 +52,7 @@ public class Elevator {
 		 * This is the PID controller for the drive
 		 */
 		elevatorController = new MiniPID(Constants.kElevate_Pu, Constants.kElevate_Iu, Constants.kElevate_Du);
+		
 	}
 
 	/*
@@ -116,16 +117,25 @@ public class Elevator {
 		// PID constants depend on whether we are going up or down
 		isDescending = (position < getEncoderPosition());
 
+		// Calculate the current distance error
+		currentDistanceError = Math.abs(position - getEncoderPosition());
+		
+		// Are we approaching the setpoint?
 		if (currentDistanceError < (Constants.kElevatorToleranceDistance * 3))
 			inDeadBand = true;
 
+		// Are we really, really close to the setpoint?
+		//if (currentDistanceError < Constants.kElevatorToleranceDistance)
+			//stop();
+		
 		// When we get close to the target, dynamically adjust PI terms
+		// This will happen only once as the elevator nears the setpoint
 		if (inDeadBand) {
 			if (!isDescending) { // is elevating
 				elevatorController.setI(Constants.kElevate_Iu);
 				elevatorController.setP(Constants.kElevate_Pu);
 				elevatorController.setOutputLimits(-0.5, 1.0);
-			} else {
+			} else {			// descending
 				elevatorController.setI(Constants.kElevate_Ida);
 				elevatorController.setP(Constants.kElevate_Pda);
 				elevatorController.setOutputLimits(-0.5, 1.0);

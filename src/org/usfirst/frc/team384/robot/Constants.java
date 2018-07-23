@@ -41,19 +41,19 @@ public class Constants {
     public static final double kSteerYawToleranceDegrees = 1.0;	// units are in inches
 
     // Elevator  PID
-  	public static final double kElevate_Pu = 0.002;		// up elevator P gain
-  	public static final double kElevate_Iu = 0.0;		// up elevator I gain
+  	public static final double kElevate_Pu = 0.004;		// up elevator P gain 				0.002
+  	public static final double kElevate_Iu = 0.0;		// up elevator I gain				0.0
   	public static final double kElevate_Du = 0.0;		// up elevator D gain
-  	public static final double kElevate_Pd = 0.001;		// up elevator P gain
-  	public static final double kElevate_Id = 0.0;		// up elevator I gain
-  	public static final double kElevate_Dd = 0.01;		// up elevator I gain
+  	public static final double kElevate_Pd = 0.001;		// down elevator P gain				0.001
+  	public static final double kElevate_Id = 0.0;		// down elevator I gain
+  	public static final double kElevate_Dd = 0.01;		// down elevator D gain
   	
-  	public static final double kElevate_Pua = 0.0015;	// up elevator P gain
-  	public static final double kElevate_Iua = 0.0;		// up elevator I gain
-  	//public static final double kElevate_Dua = 0.0;	// up elevator D gain
-  	public static final double kElevate_Pda = 0.0002;	// up elevator P gain
-  	public static final double kElevate_Ida = 0.0;		// up elevator I gain
-  	//public static final double kElevate_Dda = 0.01;	// up elevator I gain
+  	public static final double kElevate_Pua = 0.003;	// up elevator approach P gain		0.0025
+  	public static final double kElevate_Iua = 0.0;		// up elevator approach I gain		0.0
+  	public static final double kElevate_Dua = 0.0;		// up elevator approach D gain
+  	public static final double kElevate_Pda = 0.0004;	// down elevator approach P gain	0.0002
+  	public static final double kElevate_Ida = 0.0;		// down elevator approach I gain
+  	public static final double kElevate_Dda = 0.01;		// down elevator approach I gain
   	
   	public static final int kElevatorToleranceDistance = 300;
     
