@@ -106,7 +106,7 @@ public class Robot extends TimedRobot {
 		
 		// Initialize encoders
 		drivetrain.initializeEncoders();
-		elevator.initializeEncoders();
+		elevator.initializeEncoders();	// TODO - make sure we are att bottom first
 		
 		// Zero the IMU
 		drivetrain.imuZeroYaw();
@@ -115,7 +115,7 @@ public class Robot extends TimedRobot {
 		drivetrain.setBrakeMode(true);
 		
 		// Set the elevator brakemode
-		drivetrain.setBrakeMode(true);
+		//drivetrain.setBrakeMode(true);
 	}
 
 	/**
@@ -210,7 +210,10 @@ public class Robot extends TimedRobot {
 
 
 	public void teleopInit()	{
-		elevator.shiftToElevate(); 	// safer to start out ths way
+		// Not sure if I need this here, elevator enable code does this
+		//elevator.shiftToElevate(); 	// safer to start out this way
+		// Enable the elevator PID control
+		elevator.enable();
 	}
 	
 	/**
@@ -257,7 +260,6 @@ public class Robot extends TimedRobot {
 		if (claws.cubePresent() && !oi.joyButtonStatus[0][6] && !oi.joyButtonStatus[0][9])	{
 			claws.intakeHold();
 			cubePresent = true;
-			//System.out.println("joy button  stick 0, button 6" + oi.joyButtonStatus[0][6]);
 		} else if (cubePresent) {
 			claws.intakeStop();
 			cubePresent = false;
@@ -273,9 +275,18 @@ public class Robot extends TimedRobot {
 		
 		// STICK1 (COPILOT)
 		
-		// Manual elevator control
+		// Manual elevator control - use joystick to control elevator setpoint
 		if (oi.getButtonHeld(Constants.STICK1,4))	{
-			elevator.manualControl(-oi.getAxis(Constants.STICK1, Constants.YAXIS));
+			// Add a little chunk of joystick to setpoint for every scan
+			elevatorHeight += 75 * -oi.getAxis(Constants.STICK1, Constants.YAXIS);
+			
+			// Make sure that elevator height doesn't get out of control
+			if (elevatorHeight > Constants.kEncoder_Max)
+				elevatorHeight = Constants.kEncoder_Max;
+			else if (elevatorHeight < 0)
+				elevatorHeight = 0;
+			
+			//elevator.manualControl(-oi.getAxis(Constants.STICK1, Constants.YAXIS));
 		} else {
 			elevator.stop();
 		}
@@ -291,6 +302,8 @@ public class Robot extends TimedRobot {
 		}
 		
 		// Set PTO to climber
+		// TODO - When going to climber mode, how does that affect the new 
+		// elevator operation?
 		if (oi.getButtonHeld(Constants.STICK1, 7))	{
 			elevator.shiftToClimb();
 		}
@@ -298,21 +311,25 @@ public class Robot extends TimedRobot {
 		// Send elevator to switch height position 
 		if (oi.getButtonHeld(Constants.STICK1,8))	{
 			elevatorHeight = Constants.kEncoder_LowSwitch;
-			elevator.moveTo(elevatorHeight);
+			//elevator.moveTo(elevatorHeight);
 		}
 		
 		// Send elevator to scale height position 
 		if (oi.getButtonHeld(Constants.STICK1,9))	{
 			elevatorHeight = Constants.kEncoder_Scale;
-			elevator.moveTo(elevatorHeight);
+			//elevator.moveTo(elevatorHeight);
 		}
 		
 		// Send elevator to ground height position 
 		if (oi.getButtonHeld(Constants.STICK1,10))	{
 			elevatorHeight = 0;
-			elevator.moveTo(elevatorHeight);
+			//elevator.moveTo(elevatorHeight);
 		}
 		
+		/*
+		 *  Command the elevator to move to whatever height is currently set,
+		 *  which is zero if otherwise
+		 */
 		if (isElevating)	{
 			elevator.moveTo(elevatorHeight);
 		}
@@ -324,7 +341,7 @@ public class Robot extends TimedRobot {
 		//SmartDashboard.putNumber("Left encoder position: ", drivetrain.getEncoderPosition(Constants.DRIVE_LEFT));
 		//SmartDashboard.putNumber("Right encoder position: ", drivetrain.getEncoderPosition(Constants.DRIVE_RIGHT));
 		SmartDashboard.putNumber("Elevator position from getEncoderPosition: ", elevator.getEncoderPosition());
-		//SmartDashboard.putNumber("Elevator position from getPosition: ", elevator.getPosition());
+		SmartDashboard.putNumber("Elevator height setpoint ", elevatorHeight);
 		//SmartDashboard.putBoolean("Cube photoeye: ", claws.cubePresent());
 		//SmartDashboard.putBoolean("Upper elevator prox: ", elevator.getIsElevAtTop());
 		//SmartDashboard.putBoolean("Lower elevator prox: ", elevator.getIsElevAtBottom());

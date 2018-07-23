@@ -22,6 +22,7 @@ public class Elevator {
 	private Solenoid pto = new Solenoid(0, 0);
 	private Solenoid climber = new Solenoid(0, 3);
 
+	// Elevator moveTo() variables
 	private MiniPID elevatorController; // elevator position pid controller
 	double elevateToPositionRate; // elevator position pid output
 	double elevatorOutput; // value to elevator motor
@@ -82,27 +83,35 @@ public class Elevator {
 	}
 
 	/*
-	 * The new elevator positioning code I will start with an integer position, and
-	 * work up to a double position in inches
-	 * 
-	 * Also requires a timeout value, which is time before we give up PID control
-	 * and move to whatever next step
-	 * 
+	 * The elevator must be enabled before trying to move it. This should be done 
+	 * during robotInit()
+	 */
+	public void enable()	{
+		if (!Robot.isElevating) {
+			//elevatorController.setSetpoint(position);
+			elevateToPositionRate = 0;
+			elevatorOutput = 0.0;
+			//failTimer.start(); // the PID will fail if this timer exceeded
+			Robot.isElevating = true;
+			shiftToElevate(); // safety third!
+			elevatorController.reset();
+		}
+	}
+	
+	/*
+	 * Elevator would be disabled during climb mode 
+	 */
+	public void disable()	{
+		Robot.isElevating = false;
+	}
+	
+	/*
+	 * Requires position as an int that ranges from 0 (bottom) to ~ 3200 (top) 
 	 * Returns: 1 = PID not complete 0 = PID complete -1 = error
 	 */
 	public int moveTo(int position) {
 		boolean isDescending;
 		boolean inDeadBand = false;
-
-		if (!Robot.isElevating) {
-			elevatorController.setSetpoint(position);
-			elevateToPositionRate = 0;
-			elevatorOutput = 0.0;
-			failTimer.start(); // the PID will fail if this timer exceeded
-			Robot.isElevating = true;
-			shiftToElevate(); // safety third!
-			elevatorController.reset();
-		}
 
 		// PID constants depend on whether we are going up or down
 		isDescending = (position < getEncoderPosition());
@@ -147,34 +156,7 @@ public class Elevator {
 			lifterPrimaryMotor.set(ControlMode.PercentOutput, 0.15);
 		}
 
-		// Are we within deadband?
-		if ((Math.abs(position - getEncoderPosition())) < Constants.kElevatorToleranceDistance) {
-			if (!timing) {
-				intervalTimer.start();
-				timing = true;
-			}
-		} else {
-			intervalTimer.reset();
-		}
-
-		if (intervalTimer.hasPeriodPassed(0.1)) {
-			stop();
-			System.out.println("Elevator PID finished, actual counts: " + getEncoderPosition());
-			Robot.isElevating = false;
-			intervalTimer.reset();
-			failTimer.reset();
-			return 0;
-		} else if (failTimer.hasPeriodPassed(5.0)) { // the PID has failed!
-			stop();
-			System.out.println("Elevator PID timeout, setpoint: " + position);
-			System.out.println("Elevator PID timeout, actual counts: " + getEncoderPosition());
-			Robot.isElevating = false;
-			intervalTimer.reset();
-			failTimer.reset();
-			return -1;
-		} else { // the PID is not complete
-			return 1;
-		}
+		return 1;	// TODO - is a return value still required?
 	}
 
 	/*
