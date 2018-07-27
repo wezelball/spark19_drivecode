@@ -67,6 +67,7 @@ public class Robot extends TimedRobot {
 	static boolean isTurning = false;	// the robot is turning - controlled by drivebase.turnTo()
 	static boolean isDriving = false;	// the robot is driving - controlled by drivebase.driveTo()
 	static boolean isElevating = false;	// elevator is elevating - controlled by elevator.moveTo()
+	static boolean isElevatorManual = false; // elevator in under manual joystick control
 	
 	/*
 	 * Variables for control of turn, drive, and elevator controller PID's 
@@ -144,26 +145,21 @@ public class Robot extends TimedRobot {
 		{
 		  if(gameData.charAt(0) == 'L')		
 		  {
-			  isSwitchLeftOurs = true;		// Our switch is on the left sode
+			  isSwitchLeftOurs = true;		// Our switch is on the left side
 		  } else {
-			  isSwitchLeftOurs = false;		// Our switch is on the right sode
+			  isSwitchLeftOurs = false;		// Our switch is on the right side
 		  }
 
 		  if(gameData.charAt(1) == 'L')		
 		  {
-			  isScaleLeftOurs = true;		// Our scale is on the left sode
+			  isScaleLeftOurs = true;		// Our scale is on the left side
 		  } else {
-			  isScaleLeftOurs = false;		// Our scale is on the right sode
+			  isScaleLeftOurs = false;		// Our scale is on the right side
 		  }
 		
 		}
-
-		/*
-		 *  Are we going for the scale or the switch or the straight drive in auto?
-		 *  
-		 */
-		
-		elevator.initializeEncoders();	// Zero the IMU		
+		elevator.initializeEncoders();	// Zero the IMU	
+		elevator.enable();				// gotta be here, or we're breaking shit
 		autoStep = 0;	// try to comment this out
 	}
 
@@ -171,6 +167,11 @@ public class Robot extends TimedRobot {
 	 * This function is called periodically during autonomous.
 	 */
 	@Override
+
+	/*
+	 *  Are we going for the scale or the switch or the straight drive in auto?
+	 *  
+	 */
 	public void autonomousPeriodic() {		
 		switch (m_autoSelected) {
 			case k1Auto:
@@ -207,6 +208,9 @@ public class Robot extends TimedRobot {
 				}
 				break;
 		}		
+
+		// Maintain elevator position - update once per loop
+		elevator.moveTo(elevatorHeight);
 	}
 
 
@@ -276,16 +280,18 @@ public class Robot extends TimedRobot {
 		
 		// Manual elevator control - use joystick to control elevator setpoint
 		if (oi.getButtonHeld(Constants.STICK1,4))	{
-			// Add a little chunk of joystick to setpoint for every scan
-			elevatorHeight += 75 * -oi.getAxis(Constants.STICK1, Constants.YAXIS);
-			
-			// Make sure that elevator height doesn't get out of control
-			if (elevatorHeight > Constants.kEncoder_Max)
-				elevatorHeight = Constants.kEncoder_Max;
-			else if (elevatorHeight < 0)
-				elevatorHeight = 0;
+			isElevatorManual = true;
+			// Use the overloaded move to run off of manual joytick axis
+			elevator.moveTo(-oi.getAxis(Constants.STICK1, Constants.YAXIS));
+			// Update the value of elevator height for "bumpless transfer"
+			// from manual to auto (this should have been done in MiniPID,
+			// but that's for another day
+			// When we switch to auto, the height setpoint and feedback will be equal 
+			elevatorHeight = elevator.getEncoderPosition();
+
 		} else {
 			elevator.stop();
+			isElevatorManual = false;
 		}
 		
 		// Toggle climber cylinder
@@ -308,26 +314,23 @@ public class Robot extends TimedRobot {
 		// Send elevator to switch height position 
 		if (oi.getButtonHeld(Constants.STICK1,8))	{
 			elevatorHeight = Constants.kEncoder_LowSwitch;
-			//elevator.moveTo(elevatorHeight);
 		}
 		
 		// Send elevator to scale height position 
 		if (oi.getButtonHeld(Constants.STICK1,9))	{
 			elevatorHeight = Constants.kEncoder_Scale;
-			//elevator.moveTo(elevatorHeight);
 		}
 		
 		// Send elevator to ground height position 
 		if (oi.getButtonHeld(Constants.STICK1,10))	{
 			elevatorHeight = 0;
-			//elevator.moveTo(elevatorHeight);
 		}
 		
 		/*
 		 *  Command the elevator to move to whatever height is currently set,
-		 *  which is zero if otherwise
+		 *  as long as elevator not under control
 		 */
-		if (isElevating)	{
+		if (isElevating  & !isElevatorManual)	{
 			elevator.moveTo(elevatorHeight);
 		}
 		

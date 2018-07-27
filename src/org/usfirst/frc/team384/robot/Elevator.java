@@ -32,6 +32,7 @@ public class Elevator {
 	private Timer intervalTimer = new Timer(); // PID interval timer
 	private Timer failTimer = new Timer(); // PID fails if value exceeded
 	boolean timing = false; // PID interval timer timing
+	boolean inDeadBand;
 
 	public Elevator() {
 		lifterPrimaryMotor.set(ControlMode.PercentOutput, 0);
@@ -51,8 +52,8 @@ public class Elevator {
 		/*
 		 * This is the PID controller for the drive
 		 */
-		elevatorController = new MiniPID(Constants.kElevate_Pu, Constants.kElevate_Iu, Constants.kElevate_Du);
-		
+		elevatorController = new MiniPID(Constants.kElevate_Pu, Constants.kElevate_Iu, Constants.kElevate_Du, Constants.kElevate_FFu);
+		this.inDeadBand = false;
 	}
 
 	/*
@@ -89,7 +90,6 @@ public class Elevator {
 	 */
 	public void enable()	{
 		if (!Robot.isElevating) {
-			//elevatorController.setSetpoint(position);
 			elevateToPositionRate = 0;
 			elevatorOutput = 0.0;
 			//failTimer.start(); // the PID will fail if this timer exceeded
@@ -107,12 +107,13 @@ public class Elevator {
 	}
 	
 	/*
+	 * moveTo for PID positioning
 	 * Requires position as an int that ranges from 0 (bottom) to ~ 3200 (top) 
 	 * Returns: 1 = PID not complete 0 = PID complete -1 = error
 	 */
 	public int moveTo(int position) {
 		boolean isDescending;
-		boolean inDeadBand = false;
+		//boolean inDeadBand;
 
 		// PID constants depend on whether we are going up or down
 		isDescending = (position < getEncoderPosition());
@@ -124,20 +125,18 @@ public class Elevator {
 		if (currentDistanceError < (Constants.kElevatorToleranceDistance * 3))
 			inDeadBand = true;
 
-		// Are we really, really close to the setpoint?
-		//if (currentDistanceError < Constants.kElevatorToleranceDistance)
-			//stop();
-		
 		// When we get close to the target, dynamically adjust PI terms
 		// This will happen only once as the elevator nears the setpoint
 		if (inDeadBand) {
 			if (!isDescending) { // is elevating
-				elevatorController.setI(Constants.kElevate_Iu);
-				elevatorController.setP(Constants.kElevate_Pu);
+				elevatorController.setI(Constants.kElevate_Iua);
+				elevatorController.setP(Constants.kElevate_Pua);
+				elevatorController.setF(Constants.kElevate_FFua);
 				elevatorController.setOutputLimits(-0.5, 1.0);
 			} else {			// descending
 				elevatorController.setI(Constants.kElevate_Ida);
 				elevatorController.setP(Constants.kElevate_Pda);
+				elevatorController.setF(Constants.kElevate_FFda);
 				elevatorController.setOutputLimits(-0.5, 1.0);
 			}
 		}
@@ -161,14 +160,18 @@ public class Elevator {
 			lifterPrimaryMotor.set(ControlMode.PercentOutput, 0.15);
 		}
 
-		if (getIsElevAtTop() == true) { // If at bottom, reset encoder counts
-			// Don't shut off completely, we'll never move again
-			lifterPrimaryMotor.set(ControlMode.PercentOutput, 0.15);
-		}
-
 		return 1;	// TODO - is a return value still required?
 	}
 
+	/*
+	 * Overloaded moveTo for manual positioning
+	 * This is for joystick control of elevator 
+	 */
+	public int moveTo(double axis) {
+		lifterPrimaryMotor.set(ControlMode.PercentOutput, axis);
+		return 1;
+	}
+	
 	/*
 	 * Stop the elevator
 	 */
