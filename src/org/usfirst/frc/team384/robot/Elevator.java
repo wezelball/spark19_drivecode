@@ -150,7 +150,12 @@ public class Elevator {
 
 		SmartDashboard.putNumber("Elevator position from getEncoderPosition: ", getEncoderPosition());
 		SmartDashboard.putNumber("PID Output: ", elevateToPositionRate);
-
+		
+		// Let's log, baby
+		Logging.consoleLog("Elev setpoint: " + position);
+		Logging.consoleLog("Elev. feedback: " + getEncoderPosition());
+		Logging.consoleLog("PID outout: " + elevateToPositionRate);
+		
 		/*
 		 * Handle elevator extreme ends of travel to avoid mechanical damage
 		 */

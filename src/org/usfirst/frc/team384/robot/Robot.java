@@ -56,6 +56,13 @@ public class Robot extends TimedRobot {
 		drivetrain = new Drivetrain();
 		elevator = new Elevator();
 		pneumatics = new Pneumatics();
+	
+		// Set up our custom logger.
+        try
+        {
+            Logging.CustomLogger.setup();
+        }
+        catch (Throwable e) { Logging.logException(e);}
 	}
 	
 	// Operational flags
