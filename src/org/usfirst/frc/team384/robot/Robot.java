@@ -288,7 +288,7 @@ public class Robot extends TimedRobot {
 		// Manual elevator control - use joystick to control elevator setpoint
 		if (oi.getButtonHeld(Constants.STICK1,4))	{
 			isElevatorManual = true;
-			// Use the overloaded move to run off of manual joytick axis
+			// Use the overloaded move to run off of manual joystick axis
 			elevator.moveTo(-oi.getAxis(Constants.STICK1, Constants.YAXIS));
 			// Update the value of elevator height for "bumpless transfer"
 			// from manual to auto (this should have been done in MiniPID,
@@ -517,7 +517,7 @@ public class Robot extends TimedRobot {
 		case 2:		// drive forward				
 			do {
 				result = drivetrain.driveTo(72.0, 1.5);
-				elevator.moveTo(Constants.kEncoder_LowSwitch);
+				//elevator.moveTo(Constants.kEncoder_LowSwitch);
 			} while(result == 1);
 			
 			if (result == 0 || result == -1) {
@@ -566,7 +566,7 @@ public class Robot extends TimedRobot {
 		case 2:		// drive forward				
 			do {
 				result = drivetrain.driveTo(83.0, 1.5);
-				elevator.moveTo(Constants.kEncoder_LowSwitch);
+				//elevator.moveTo(Constants.kEncoder_LowSwitch);
 			} while(result == 1);
 			
 			if (result == 0 || result == -1) {
@@ -685,7 +685,7 @@ public class Robot extends TimedRobot {
 		case 9:		// turn ccw towards switch
 			do {
 				result = drivetrain.turnTo(-45.0, 1.0);
-				elevator.moveTo(1200);
+				//elevator.moveTo(1200);
 			} while (result == 1);
 	
 			autoStep += 1;
@@ -694,7 +694,7 @@ public class Robot extends TimedRobot {
 			do {
 				claws.lowerWrist();
 				claws.intakeEject(0.25);
-				elevator.moveTo(1200);
+				//elevator.moveTo(1200);
 				result = drivetrain.driveTo(12.0, 1.0);
 			} while(result == 1);
 			
@@ -706,7 +706,7 @@ public class Robot extends TimedRobot {
 				autoStep += 1; 
 			}
 			
-			elevator.stop();
+			//elevator.stop();
 			break;
 		case 99:	// autonomous finished (or failed)
 			break;
@@ -734,7 +734,7 @@ public class Robot extends TimedRobot {
 				result = drivetrain.turnTo(-35.0, 1.0);
 				elevator.moveTo(Constants.kEncoder_LowSwitch);
 			} while (result == 1);
-								
+			
 			if (result == 0 || result == -1) {
 				autoStep +=1;	// success, advance to step 2
 			}
@@ -812,21 +812,11 @@ public class Robot extends TimedRobot {
 		case 9:		// turn ccw towards switch and fire
 			do {
 				result = drivetrain.turnTo(45.0, 1.0);
-				elevator.moveTo(1200);
+				//elevator.moveTo(1200);
 			} while (result == 1);
 			
-			autoStep += 1;
-		
-		case 10:
-			do	{
-				result = elevator.moveTo(1200);
-			} while(result == 1);
-			
-			if (result == 0 || result == -1) {
-				autoStep += 1; 
-			}
-			
-		case 11:	// final short driveTo to break plane and fire
+			autoStep += 1;	
+		case 10:	// final short driveTo to break plane and fire
 			do {
 				result = drivetrain.driveTo(8.0, 1.0);
 				claws.lowerWrist();
@@ -891,7 +881,7 @@ public class Robot extends TimedRobot {
 				elevator.moveTo(Constants.kEncoder_Scale);
 			} while (result == 1);
 			
-			elevator.stop();
+			//elevator.stop();
 			claws.lowerWrist();
 			claws.intakeEject(0.8);
 			Timer.delay(0.5);
@@ -946,7 +936,7 @@ public class Robot extends TimedRobot {
 				elevator.moveTo(Constants.kEncoder_Scale);
 				} while (result == 1);
 			
-			elevator.stop();
+			//elevator.stop();
 			claws.lowerWrist();
 			claws.intakeEject(0.8);
 			Timer.delay(0.5);
@@ -986,7 +976,7 @@ public class Robot extends TimedRobot {
 		case 2:		// turn ccw				
 			do {
 				result = drivetrain.turnTo(-90, 2.0);
-				elevator.moveTo(Constants.kEncoder_LowSwitch);
+				//elevator.moveTo(Constants.kEncoder_LowSwitch);
 			} while (result == 1);
 								
 			
@@ -997,7 +987,7 @@ public class Robot extends TimedRobot {
 		case 3:		// drive forward to switch
 			do {
 				result = drivetrain.driveTo(19.0, 2.0);
-				elevator.moveTo(Constants.kEncoder_LowSwitch);
+				//elevator.moveTo(Constants.kEncoder_LowSwitch);
 			} while (result == 1);		
 			
 			if (result == 0 || result == -1) {

@@ -113,7 +113,6 @@ public class Elevator {
 	 */
 	public int moveTo(int position) {
 		boolean isDescending;
-		//boolean inDeadBand;
 
 		// PID constants depend on whether we are going up or down
 		isDescending = (position < getEncoderPosition());
@@ -144,28 +143,34 @@ public class Elevator {
 		/*
 		 * Activate elevator PID, check for proximity switches at end of travel
 		 */
-		currentDistanceError = Math.abs(position - getEncoderPosition());
 		elevateToPositionRate = elevatorController.getOutput(getEncoderPosition(), position);
 		lifterPrimaryMotor.set(ControlMode.PercentOutput, elevateToPositionRate);
 
-		SmartDashboard.putNumber("Elevator position from getEncoderPosition: ", getEncoderPosition());
-		SmartDashboard.putNumber("PID Output: ", elevateToPositionRate);
+		//SmartDashboard.putNumber("Elevator position from getEncoderPosition: ", getEncoderPosition());
+		//SmartDashboard.putNumber("PID Output: ", elevateToPositionRate);
 		
 		// Let's log, baby
-		Logging.consoleLog("Elev setpoint: " + position);
-		Logging.consoleLog("Elev. feedback: " + getEncoderPosition());
-		Logging.consoleLog("PID outout: " + elevateToPositionRate);
+		//Logging.consoleLog("Elev setpoint: " + position);
+		//Logging.consoleLog("Elev. feedback: " + getEncoderPosition());
+		//Logging.consoleLog("PID outout: " + elevateToPositionRate);
 		
 		/*
 		 * Handle elevator extreme ends of travel to avoid mechanical damage
 		 */
 		if (getIsElevAtBottom() == true) { // If at bottom, reset encoder counts
 			initializeEncoders();
-			// Don't shut off completely, we'll never move again
+			// TODO - might want to get rid of this
 			lifterPrimaryMotor.set(ControlMode.PercentOutput, 0.15);
 		}
 
-		return 1;	// TODO - is a return value still required?
+		// For now, returning a value to satisfy autonomous
+		// I may need to implement a fault timer too, but not desirable,
+		// as fault time not easy to determine
+		if (currentDistanceError < Constants.kElevatorToleranceDistance)
+			// TODO - is a return value still required?
+			return 0;	// PID complete
+		else
+			return 1;	// PID not complete
 	}
 
 	/*
@@ -182,15 +187,6 @@ public class Elevator {
 	 */
 	public void stop() {
 		lifterPrimaryMotor.set(ControlMode.PercentOutput, 0);
-	}
-
-	public void manualControl(double speed) {
-		lifterPrimaryMotor.set(ControlMode.PercentOutput, speed);
-		System.out.println("Elevator feedback (manual): " + getEncoderPosition());
-		// Zero out the encoder if bottom prox made
-		if (getIsElevAtBottom()) {
-			lifterPrimaryMotor.getSensorCollection().setQuadraturePosition(0, 0);
-		}
 	}
 
 	/*
