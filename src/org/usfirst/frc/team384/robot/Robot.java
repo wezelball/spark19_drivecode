@@ -115,7 +115,7 @@ public class Robot extends TimedRobot {
 		
 		// Initialize encoders
 		drivetrain.initializeEncoders();
-		elevator.initializeEncoders();	// TODO - make sure we are att bottom first
+		elevator.initializeEncoders();	// TODO - make sure we are at bottom first
 		
 		// Zero the IMU
 		drivetrain.imuZeroYaw();
@@ -123,8 +123,6 @@ public class Robot extends TimedRobot {
 		// Set the drivetrain brakemode
 		drivetrain.setBrakeMode(true);
 		
-		// Set the elevator brakemode
-		//drivetrain.setBrakeMode(true);
 	}
 
 	/**
